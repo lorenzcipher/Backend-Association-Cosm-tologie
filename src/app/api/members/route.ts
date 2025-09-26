@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Profile from '@/models/Profile';
-import User from '@/models/User';
 import { requireAuth } from '@/middleware/auth';
 import { successResponse, errorResponse, handleApiError } from '@/utils/response';
 
@@ -22,7 +21,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const search = searchParams.get('search');
 
-    const query: any = { membershipStatus: 'active' };
+    const query: Record<string, unknown> = { membershipStatus: 'active' };
     
     if (search) {
       query.$or = [

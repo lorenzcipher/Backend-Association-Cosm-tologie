@@ -4,12 +4,17 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 
 export interface AuthenticatedRequest extends NextRequest {
-  user?: any;
+  user?: {
+    _id: string;
+    email: string;
+    role: string;
+    isActive: boolean;
+  };
 }
 
 export async function verifyToken(token: string) {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
     
     await connectDB();
     const user = await User.findById(decoded.id).select('-password');
@@ -19,7 +24,7 @@ export async function verifyToken(token: string) {
     }
     
     return user;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

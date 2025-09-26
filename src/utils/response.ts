@@ -1,4 +1,4 @@
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data?: T;
@@ -31,7 +31,7 @@ export class ApiError extends Error {
   }
 }
 
-export function handleApiError(error: any) {
+export function handleApiError(error: unknown) {
   if (error instanceof ApiError) {
     return {
       status: error.statusCode,

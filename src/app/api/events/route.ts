@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const user = await requireAuth(request);
     
     // Build query
-    const query: any = {};
+    const query: Record<string, unknown> = {};
     
     if (upcoming) {
       query.startDate = { $gte: new Date() };

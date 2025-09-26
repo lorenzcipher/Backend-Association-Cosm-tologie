@@ -5,10 +5,18 @@ import Profile from '@/models/Profile';
 import { requireAdmin } from '@/middleware/auth';
 import { successResponse, errorResponse, handleApiError } from '@/utils/response';
 
+// Updated type for Next.js 15 - params must be a Promise
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
+
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
+  // Await the params promise
+  const { id } = await context.params;
+
   try {
     const admin = await requireAdmin(request);
     if (!admin) {
@@ -19,11 +27,11 @@ export async function PUT(
     }
 
     await connectDB();
-    
+
     const updateData = await request.json();
-    
+
     const user = await User.findByIdAndUpdate(
-      params.id,
+      id,
       updateData,
       { new: true, runValidators: true }
     ).select('-password');
@@ -38,7 +46,6 @@ export async function PUT(
     return NextResponse.json(
       successResponse(user, 'User updated successfully')
     );
-
   } catch (error) {
     const { status, response } = handleApiError(error);
     return NextResponse.json(response, { status });
@@ -47,8 +54,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
+  // Await the params promise
+  const { id } = await context.params;
+
   try {
     const admin = await requireAdmin(request);
     if (!admin) {
@@ -59,11 +69,11 @@ export async function DELETE(
     }
 
     await connectDB();
-    
+
     // Delete user and profile
-    const user = await User.findByIdAndDelete(params.id);
+    const user = await User.findByIdAndDelete(id);
     if (user) {
-      await Profile.findOneAndDelete({ userId: params.id });
+      await Profile.findOneAndDelete({ userId: id });
     }
 
     if (!user) {
@@ -76,7 +86,6 @@ export async function DELETE(
     return NextResponse.json(
       successResponse(null, 'User deleted successfully')
     );
-
   } catch (error) {
     const { status, response } = handleApiError(error);
     return NextResponse.json(response, { status });

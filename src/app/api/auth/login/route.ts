@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import jwt, { Secret, SignOptions } from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import { successResponse, errorResponse, handleApiError } from '@/utils/response';
@@ -43,18 +43,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate JWT token
+    // Ensure JWT_SECRET exists and properly type it
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error('JWT_SECRET environment variable is not set');
+      return NextResponse.json(
+        errorResponse('Server configuration error'),
+        { status: 500 }
+      );
+    }
+
+    // Prepare JWT payload
+    const payload = {
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role
+    };
+
+    // Prepare JWT options with proper typing
+    const signOptions: SignOptions = {
+      algorithm: 'HS256'
+    };
+
+    // Generate JWT token with explicit typing
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRE }
+      payload,
+      jwtSecret as Secret,
+      signOptions
     );
 
     return NextResponse.json(
       successResponse({
         token,
         user: {
-          id: user._id,
+          id: user._id.toString(),
           email: user.email,
           role: user.role,
           isVerified: user.isVerified

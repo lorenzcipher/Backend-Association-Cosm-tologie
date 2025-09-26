@@ -6,14 +6,15 @@ import { successResponse, errorResponse, handleApiError } from '@/utils/response
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    
+
     const user = await requireAuth(request);
-    const article = await Article.findById(params.id).populate('authorId', 'email');
-    
+    const { id } = await context.params;
+    const article = await Article.findById(id).populate('authorId', 'email');
+
     if (!article || !article.isPublished) {
       return NextResponse.json(
         errorResponse('Article not found'),
@@ -45,7 +46,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireAdmin(request);
@@ -57,11 +58,12 @@ export async function PUT(
     }
 
     await connectDB();
-    
+
     const updateData = await request.json();
-    
+    const { id } = await context.params;
+
     const article = await Article.findByIdAndUpdate(
-      params.id,
+      id,
       {
         ...updateData,
         publishedAt: updateData.isPublished && !updateData.publishedAt 
@@ -90,7 +92,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireAdmin(request);
@@ -102,9 +104,10 @@ export async function DELETE(
     }
 
     await connectDB();
-    
-    const article = await Article.findByIdAndDelete(params.id);
-    
+
+    const { id } = await context.params;
+    const article = await Article.findByIdAndDelete(id);
+
     if (!article) {
       return NextResponse.json(
         errorResponse('Article not found'),

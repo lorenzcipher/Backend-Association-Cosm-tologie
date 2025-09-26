@@ -3,11 +3,14 @@ import connectDB from '@/lib/mongodb';
 import Event from '@/models/Event';
 import { requireAuth } from '@/middleware/auth';
 import { successResponse, errorResponse, handleApiError } from '@/utils/response';
+import mongoose from 'mongoose';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
+
   try {
     const user = await requireAuth(request);
     if (!user) {
@@ -19,7 +22,7 @@ export async function POST(
 
     await connectDB();
     
-    const event = await Event.findById(params.id);
+    const event = await Event.findById(id);
     
     if (!event) {
       return NextResponse.json(
@@ -76,8 +79,10 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await context.params;
+
   try {
     const user = await requireAuth(request);
     if (!user) {
@@ -89,7 +94,7 @@ export async function DELETE(
 
     await connectDB();
     
-    const event = await Event.findById(params.id);
+    const event = await Event.findById(id);
     
     if (!event) {
       return NextResponse.json(
@@ -100,7 +105,7 @@ export async function DELETE(
 
     // Remove user from participants
     event.participants = event.participants.filter(
-      participantId => !participantId.equals(user._id)
+      (participantId: mongoose.Types.ObjectId) => !participantId.equals(user._id)
     );
     
     await event.save();

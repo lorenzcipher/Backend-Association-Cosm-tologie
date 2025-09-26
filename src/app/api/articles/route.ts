@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const user = await requireAuth(request);
     
     // Build query
-    const query: any = { isPublished: true };
+    const query: Record<string, unknown> = { isPublished: true };
     
     if (memberOnly) {
       // Member-only articles require authentication

@@ -1,89 +1,32 @@
 {
   "info": {
-    "name": "Cosmeto Association API",
-    "description": "API complète pour la plateforme de l'association de cosmétologie",
+    "name": "Cosmeto Association API - Full",
+    "description": "Complete API endpoints for Cosmeto Association",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:3000/api",
-      "type": "string"
-    },
-    {
-      "key": "token",
-      "value": "",
-      "type": "string"
-    }
-  ],
   "item": [
     {
-      "name": "Authentification",
+      "name": "Authentication",
       "item": [
         {
-          "name": "Inscription",
+          "name": "Login",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "url": "{{baseUrl}}/auth/login",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"membre@example.com\",\n  \"password\": \"motdepasse123\",\n  \"firstName\": \"Jean\",\n  \"lastName\": \"Dupont\",\n  \"phone\": \"+33123456789\",\n  \"professionalStatus\": \"professional\",\n  \"domainOfInterest\": [\"skincare\", \"research\"]\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "register"]
-            }
-          }
-        },
-        {
-          "name": "Connexion",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    var jsonData = pm.response.json();",
-                  "    if (jsonData.data && jsonData.data.token) {",
-                  "        pm.collectionVariables.set('token', jsonData.data.token);",
-                  "    }",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "login"]
+              "raw": "{\n\t\"email\": \"user@example.com\",\n\t\"password\": \"password123\"\n}",
+              "options": { "raw": { "language": "json" } }
             }
           }
         }
       ]
     },
     {
-      "name": "Profil Utilisateur",
+      "name": "Articles",
       "item": [
         {
-          "name": "Obtenir mon profil",
+          "name": "Get Article",
           "request": {
             "method": "GET",
             "header": [
@@ -93,14 +36,14 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["profile"]
+              "raw": "{{BASE_URL}}/api/articles/{{articleId}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "articles", "{{articleId}}"]
             }
           }
         },
         {
-          "name": "Modifier mon profil",
+          "name": "Update Article",
           "request": {
             "method": "PUT",
             "header": [
@@ -113,168 +56,19 @@
                 "value": "application/json"
               }
             ],
+            "url": {
+              "raw": "{{BASE_URL}}/api/articles/{{articleId}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "articles", "{{articleId}}"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"phone\": \"+33987654321\",\n  \"biography\": \"Expert en cosmétologie avec 10 ans d'expérience\",\n  \"city\": \"Paris\",\n  \"country\": \"France\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/profile",
-              "host": ["{{baseUrl}}"],
-              "path": ["profile"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Articles",
-      "item": [
-        {
-          "name": "Liste des articles publics",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{baseUrl}}/articles?page=1&limit=10",
-              "host": ["{{baseUrl}}"],
-              "path": ["articles"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "10"
-                }
-              ]
+              "raw": "{\n\t\"title\": \"Updated Title\",\n\t\"content\": \"Updated content\",\n\t\"isPublished\": true\n}"
             }
           }
         },
         {
-          "name": "Articles membres uniquement",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/articles?memberOnly=true",
-              "host": ["{{baseUrl}}"],
-              "path": ["articles"],
-              "query": [
-                {
-                  "key": "memberOnly",
-                  "value": "true"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Créer un article (Admin)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Nouvelles tendances en cosmétologie 2024\",\n  \"content\": \"Contenu complet de l'article avec toutes les informations détaillées...\",\n  \"excerpt\": \"Découvrez les dernières innovations en cosmétologie pour l'année 2024\",\n  \"tags\": [\"tendances\", \"innovation\", \"2024\"],\n  \"isMemberOnly\": false,\n  \"isPublished\": true\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/articles",
-              "host": ["{{baseUrl}}"],
-              "path": ["articles"]
-            }
-          }
-        },
-        {
-          "name": "Obtenir un article",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{baseUrl}}/articles/ARTICLE_ID",
-              "host": ["{{baseUrl}}"],
-              "path": ["articles", "ARTICLE_ID"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Événements",
-      "item": [
-        {
-          "name": "Liste des événements",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{baseUrl}}/events?upcoming=true",
-              "host": ["{{baseUrl}}"],
-              "path": ["events"],
-              "query": [
-                {
-                  "key": "upcoming",
-                  "value": "true"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Créer un événement (Admin)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Congrès International de Cosmétologie 2024\",\n  \"description\": \"Le plus grand rassemblement de professionnels de la cosmétologie en Europe\",\n  \"startDate\": \"2024-06-15T09:00:00Z\",\n  \"endDate\": \"2024-06-17T18:00:00Z\",\n  \"location\": \"Centre de Congrès de Paris\",\n  \"isOnline\": false,\n  \"isMemberOnly\": true,\n  \"maxParticipants\": 500,\n  \"registrationRequired\": true,\n  \"registrationDeadline\": \"2024-06-01T23:59:59Z\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/events",
-              "host": ["{{baseUrl}}"],
-              "path": ["events"]
-            }
-          }
-        },
-        {
-          "name": "S'inscrire à un événement",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/events/EVENT_ID/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["events", "EVENT_ID", "register"]
-            }
-          }
-        },
-        {
-          "name": "Se désinscrire d'un événement",
+          "name": "Delete Article",
           "request": {
             "method": "DELETE",
             "header": [
@@ -284,237 +78,41 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/events/EVENT_ID/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["events", "EVENT_ID", "register"]
+              "raw": "{{BASE_URL}}/api/articles/{{articleId}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "articles", "{{articleId}}"]
             }
           }
         }
       ]
     },
     {
-      "name": "Contact",
+      "name": "Events",
       "item": [
         {
-          "name": "Envoyer un message de contact",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Marie Dubois\",\n  \"email\": \"marie.dubois@example.com\",\n  \"subject\": \"Demande d'informations sur l'adhésion\",\n  \"message\": \"Bonjour, je souhaiterais obtenir plus d'informations sur les modalités d'adhésion à votre association.\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/contact",
-              "host": ["{{baseUrl}}"],
-              "path": ["contact"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Messagerie Interne",
-      "item": [
-        {
-          "name": "Mes messages",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/messages?type=received&page=1&limit=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["messages"],
-              "query": [
-                {
-                  "key": "type",
-                  "value": "received"
-                },
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "20"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Envoyer un message",
+          "name": "Register for Event",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"receiverId\": \"USER_ID_DESTINATAIRE\",\n  \"subject\": \"Collaboration possible\",\n  \"content\": \"Bonjour, je serais intéressé(e) par une collaboration sur votre projet de recherche.\"\n}"
-            },
             "url": {
-              "raw": "{{baseUrl}}/messages",
-              "host": ["{{baseUrl}}"],
-              "path": ["messages"]
+              "raw": "{{BASE_URL}}/api/events/{{eventId}}/register",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "events", "{{eventId}}", "register"]
             }
           }
         }
       ]
-    },
+    }
+  ],
+  "variable": [
     {
-      "name": "Annuaire des Membres",
-      "item": [
-        {
-          "name": "Liste des membres",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/members?page=1&limit=20&search=",
-              "host": ["{{baseUrl}}"],
-              "path": ["members"],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "20"
-                },
-                {
-                  "key": "search",
-                  "value": ""
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Administration",
-      "item": [
-        {
-          "name": "Gestion Utilisateurs",
-          "item": [
-            {
-              "name": "Liste tous les utilisateurs",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{baseUrl}}/admin/users?page=1&limit=20",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["admin", "users"],
-                  "query": [
-                    {
-                      "key": "page",
-                      "value": "1"
-                    },
-                    {
-                      "key": "limit",
-                      "value": "20"
-                    }
-                  ]
-                }
-              }
-            },
-            {
-              "name": "Modifier un utilisateur",
-              "request": {
-                "method": "PUT",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"role\": \"admin\",\n  \"isActive\": true,\n  \"isVerified\": true\n}"
-                },
-                "url": {
-                  "raw": "{{baseUrl}}/admin/users/USER_ID",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["admin", "users", "USER_ID"]
-                }
-              }
-            },
-            {
-              "name": "Supprimer un utilisateur",
-              "request": {
-                "method": "DELETE",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{baseUrl}}/admin/users/USER_ID",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["admin", "users", "USER_ID"]
-                }
-              }
-            }
-          ]
-        },
-        {
-          "name": "Statistiques",
-          "item": [
-            {
-              "name": "Statistiques globales",
-              "request": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{token}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{baseUrl}}/admin/stats",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["admin", "stats"]
-                }
-              }
-            }
-          ]
-        }
-      ]
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
     }
   ]
 }

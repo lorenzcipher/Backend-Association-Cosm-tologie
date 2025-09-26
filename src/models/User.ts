@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
+import type { CallbackError } from 'mongoose';
 
 export interface IUser extends Document {
   email: string;
@@ -49,8 +50,8 @@ UserSchema.pre<IUser>('save', async function (next) {
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
     next();
-  } catch (error: any) {
-    next(error);
+  } catch (error: unknown) {
+    next(error as CallbackError);
   }
 });
 
