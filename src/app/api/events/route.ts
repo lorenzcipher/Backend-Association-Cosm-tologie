@@ -4,6 +4,22 @@ import Event from '@/models/Event';
 import { requireAuth, requireAdmin } from '@/middleware/auth';
 import { successResponse, errorResponse, handleApiError } from '@/utils/response';
 
+interface CreateEventBody {
+  title: string;
+  description: string;
+  startDate: Date;
+  endDate: Date;
+  location: string;
+  isOnline: boolean;
+  isMemberOnly: boolean;
+  maxParticipants: number;
+  registrationRequired: boolean;
+  registrationDeadline: Date;
+  participants: string[];
+  memberPrice: number;
+  nonMemberPrice: number;
+}
+
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
@@ -64,16 +80,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await connectDB();
+    const body: CreateEventBody = await request.json();
     
-    const eventData = await request.json();
-    
-    const event = new Event({
-      ...eventData,
+    const event = await Event.create({
+      ...body,
+      memberPrice: body.memberPrice || 0,
+      nonMemberPrice: body.nonMemberPrice || 0,
       createdBy: user._id
     });
-
-    await event.save();
 
     return NextResponse.json(
       successResponse(event, 'Event created successfully'),

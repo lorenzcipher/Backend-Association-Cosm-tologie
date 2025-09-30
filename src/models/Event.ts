@@ -15,6 +15,8 @@ export interface IEvent extends Document {
   participants: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
+  memberPrice: number;
+  nonMemberPrice: number;
 }
 
 const EventSchema: Schema = new Schema({
@@ -58,7 +60,17 @@ const EventSchema: Schema = new Schema({
   participants: [{
     type: Schema.Types.ObjectId,
     ref: 'User'
-  }]
+  }],
+  memberPrice: {
+    type: Number,
+    required: true,
+    default: 0
+  },
+  nonMemberPrice: {
+    type: Number,
+    required: true,
+    default: 0
+  }
 }, {
   timestamps: true
 });
