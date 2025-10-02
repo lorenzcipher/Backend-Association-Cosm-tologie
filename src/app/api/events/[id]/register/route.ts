@@ -1,29 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Event from '@/models/Event';
-import { requireAuth } from '@/middleware/auth';
+import { requireAuth, requireAdmin } from '@/middleware/auth';
 import { successResponse, errorResponse, handleApiError } from '@/utils/response';
-import mongoose from 'mongoose';
 
-export async function POST(
+// Get single event
+export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: { id: string } }
 ) {
-  const { id } = await context.params;
-
   try {
-    const user = await requireAuth(request);
-    if (!user) {
-      return NextResponse.json(
-        errorResponse('Authentication required'),
-        { status: 401 }
-      );
-    }
-
     await connectDB();
-    
-    const event = await Event.findById(id);
-    
+    const { id } = context.params;
+
+    const event = await Event.findById(id)
+      .populate('createdBy', 'email')
+      .populate('participants', 'email name');
+
     if (!event) {
       return NextResponse.json(
         errorResponse('Event not found'),
@@ -31,44 +24,8 @@ export async function POST(
       );
     }
 
-    // Check if registration is required
-    if (!event.registrationRequired) {
-      return NextResponse.json(
-        errorResponse('This event does not require registration'),
-        { status: 400 }
-      );
-    }
-
-    // Check if registration deadline has passed
-    if (event.registrationDeadline && new Date() > event.registrationDeadline) {
-      return NextResponse.json(
-        errorResponse('Registration deadline has passed'),
-        { status: 400 }
-      );
-    }
-
-    // Check if user is already registered
-    if (event.participants.includes(user._id)) {
-      return NextResponse.json(
-        errorResponse('Already registered for this event'),
-        { status: 400 }
-      );
-    }
-
-    // Check maximum participants
-    if (event.maxParticipants && event.participants.length >= event.maxParticipants) {
-      return NextResponse.json(
-        errorResponse('Event is full'),
-        { status: 400 }
-      );
-    }
-
-    // Add user to participants
-    event.participants.push(user._id);
-    await event.save();
-
     return NextResponse.json(
-      successResponse(null, 'Successfully registered for the event')
+      successResponse(event, 'Event retrieved successfully')
     );
 
   } catch (error) {
@@ -77,25 +34,25 @@ export async function POST(
   }
 }
 
-export async function DELETE(
+// Update event
+export async function PUT(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context: { params: { id: string } }
 ) {
-  const { id } = await context.params;
-
   try {
-    const user = await requireAuth(request);
+    const user = await requireAdmin(request);
     if (!user) {
       return NextResponse.json(
-        errorResponse('Authentication required'),
-        { status: 401 }
+        errorResponse('Admin access required'),
+        { status: 403 }
       );
     }
 
     await connectDB();
-    
+    const { id } = context.params;
+    const updates = await request.json();
+
     const event = await Event.findById(id);
-    
     if (!event) {
       return NextResponse.json(
         errorResponse('Event not found'),
@@ -103,15 +60,51 @@ export async function DELETE(
       );
     }
 
-    // Remove user from participants
-    event.participants = event.participants.filter(
-      (participantId: mongoose.Types.ObjectId) => !participantId.equals(user._id)
+    const updatedEvent = await Event.findByIdAndUpdate(
+      id,
+      { $set: updates },
+      { new: true, runValidators: true }
     );
-    
-    await event.save();
 
     return NextResponse.json(
-      successResponse(null, 'Successfully unregistered from the event')
+      successResponse(updatedEvent, 'Event updated successfully')
+    );
+
+  } catch (error) {
+    const { status, response } = handleApiError(error);
+    return NextResponse.json(response, { status });
+  }
+}
+
+// Delete event
+export async function DELETE(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
+  try {
+    const user = await requireAdmin(request);
+    if (!user) {
+      return NextResponse.json(
+        errorResponse('Admin access required'),
+        { status: 403 }
+      );
+    }
+
+    await connectDB();
+    const { id } = context.params;
+
+    const event = await Event.findById(id);
+    if (!event) {
+      return NextResponse.json(
+        errorResponse('Event not found'),
+        { status: 404 }
+      );
+    }
+
+    await Event.findByIdAndDelete(id);
+
+    return NextResponse.json(
+      successResponse(null, 'Event deleted successfully')
     );
 
   } catch (error) {
