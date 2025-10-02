@@ -7,11 +7,11 @@ import { successResponse, errorResponse, handleApiError } from '@/utils/response
 // Get single event
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const { id } = context.params;
+    const { id } = params;
 
     const event = await Event.findById(id)
       .populate('createdBy', 'email')
@@ -37,7 +37,7 @@ export async function GET(
 // Update event
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const user = await requireAdmin(request);
@@ -49,7 +49,7 @@ export async function PUT(
     }
 
     await connectDB();
-    const { id } = context.params;
+    const { id } = params;
     const updates = await request.json();
 
     const event = await Event.findById(id);
@@ -79,7 +79,7 @@ export async function PUT(
 // Delete event
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const user = await requireAdmin(request);
@@ -91,7 +91,7 @@ export async function DELETE(
     }
 
     await connectDB();
-    const { id } = context.params;
+    const { id } = params;
 
     const event = await Event.findById(id);
     if (!event) {
