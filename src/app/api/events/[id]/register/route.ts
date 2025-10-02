@@ -4,14 +4,20 @@ import Event from '@/models/Event';
 import { requireAuth, requireAdmin } from '@/middleware/auth';
 import { successResponse, errorResponse, handleApiError } from '@/utils/response';
 
+interface RouteContext {
+  params: {
+    id: string;
+  };
+}
+
 // Get single event
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
     await connectDB();
-    const { id } = params;
+    const { id } = context.params;
 
     const event = await Event.findById(id)
       .populate('createdBy', 'email')
@@ -37,7 +43,7 @@ export async function GET(
 // Update event
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
     const user = await requireAdmin(request);
@@ -49,7 +55,7 @@ export async function PUT(
     }
 
     await connectDB();
-    const { id } = params;
+    const { id } = context.params;
     const updates = await request.json();
 
     const event = await Event.findById(id);
@@ -79,7 +85,7 @@ export async function PUT(
 // Delete event
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
     const user = await requireAdmin(request);
@@ -91,7 +97,7 @@ export async function DELETE(
     }
 
     await connectDB();
-    const { id } = params;
+    const { id } = context.params;
 
     const event = await Event.findById(id);
     if (!event) {
