@@ -1,16 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Event from '@/models/Event';
-import { requireAuth, requireAdmin } from '@/middleware/auth';
+import { requireAdmin } from '@/middleware/auth';
 import { successResponse, errorResponse, handleApiError } from '@/utils/response';
 
+interface Context {
+  params: {
+    id: string;
+  }
+}
+
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  context: Context
 ) {
   try {
     await connectDB();
-    const event = await Event.findById(params.id)
+    const { id } = context.params;
+    
+    const event = await Event.findById(id)
       .populate('createdBy', 'email')
       .populate('participants', 'email name');
 
@@ -32,7 +41,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: Context
 ) {
   try {
     const user = await requireAdmin(request);
@@ -44,10 +53,11 @@ export async function PUT(
     }
 
     await connectDB();
+    const { id } = context.params;
     const updates = await request.json();
     
     const event = await Event.findByIdAndUpdate(
-      params.id,
+      id,
       { $set: updates },
       { new: true, runValidators: true }
     );
@@ -70,7 +80,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: Context
 ) {
   try {
     const user = await requireAdmin(request);
@@ -82,7 +92,9 @@ export async function DELETE(
     }
 
     await connectDB();
-    const event = await Event.findByIdAndDelete(params.id);
+    const { id } = context.params;
+    
+    const event = await Event.findByIdAndDelete(id);
 
     if (!event) {
       return NextResponse.json(
