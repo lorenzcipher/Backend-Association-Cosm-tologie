@@ -4,22 +4,13 @@ import Event from '@/models/Event';
 import { requireAuth, requireAdmin } from '@/middleware/auth';
 import { successResponse, errorResponse, handleApiError } from '@/utils/response';
 
-interface RouteContext {
-  params: {
-    id: string;
-  };
-}
-
-// Get single event
 export async function GET(
   request: NextRequest,
-  context: RouteContext
+  { params }: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const { id } = context.params;
-
-    const event = await Event.findById(id)
+    const event = await Event.findById(params.id)
       .populate('createdBy', 'email')
       .populate('participants', 'email name');
 
@@ -33,17 +24,15 @@ export async function GET(
     return NextResponse.json(
       successResponse(event, 'Event retrieved successfully')
     );
-
   } catch (error) {
     const { status, response } = handleApiError(error);
     return NextResponse.json(response, { status });
   }
 }
 
-// Update event
 export async function PUT(
   request: NextRequest,
-  context: RouteContext
+  { params }: { params: { id: string } }
 ) {
   try {
     const user = await requireAdmin(request);
@@ -55,37 +44,33 @@ export async function PUT(
     }
 
     await connectDB();
-    const { id } = context.params;
     const updates = await request.json();
-
-    const event = await Event.findById(id);
-    if (!event) {
-      return NextResponse.json(
-        errorResponse('Event not found'),
-        { status: 404 }
-      );
-    }
-
-    const updatedEvent = await Event.findByIdAndUpdate(
-      id,
+    
+    const event = await Event.findByIdAndUpdate(
+      params.id,
       { $set: updates },
       { new: true, runValidators: true }
     );
 
-    return NextResponse.json(
-      successResponse(updatedEvent, 'Event updated successfully')
-    );
+    if (!event) {
+      return NextResponse.json(
+        errorResponse('Event not found'),
+        { status: 404 }
+      );
+    }
 
+    return NextResponse.json(
+      successResponse(event, 'Event updated successfully')
+    );
   } catch (error) {
     const { status, response } = handleApiError(error);
     return NextResponse.json(response, { status });
   }
 }
 
-// Delete event
 export async function DELETE(
   request: NextRequest,
-  context: RouteContext
+  { params }: { params: { id: string } }
 ) {
   try {
     const user = await requireAdmin(request);
@@ -97,9 +82,8 @@ export async function DELETE(
     }
 
     await connectDB();
-    const { id } = context.params;
+    const event = await Event.findByIdAndDelete(params.id);
 
-    const event = await Event.findById(id);
     if (!event) {
       return NextResponse.json(
         errorResponse('Event not found'),
@@ -107,12 +91,9 @@ export async function DELETE(
       );
     }
 
-    await Event.findByIdAndDelete(id);
-
     return NextResponse.json(
       successResponse(null, 'Event deleted successfully')
     );
-
   } catch (error) {
     const { status, response } = handleApiError(error);
     return NextResponse.json(response, { status });
