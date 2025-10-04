@@ -4,11 +4,6 @@ import Event from '@/models/Event';
 import { requireAuth, requireAdmin } from '@/middleware/auth';
 import { successResponse, errorResponse, handleApiError } from '@/utils/response';
 
-interface Context {
-  params: {
-    id: string;
-  }
-}
 
 interface UpdateEventBody {
   title?: string;
@@ -27,11 +22,11 @@ interface UpdateEventBody {
 
 export async function GET(
   request: NextRequest,
-  context: Context
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    const { id } = context.params;
+    const { id } = await params;
     
     const user = await requireAuth(request);
     
@@ -65,7 +60,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  context: Context
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireAdmin(request);
@@ -77,7 +72,7 @@ export async function PUT(
     }
 
     await connectDB();
-    const { id } = context.params;
+    const { id } = await params;
     const updates: UpdateEventBody = await request.json();
     
     // Validation des données
@@ -134,7 +129,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  context: Context
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireAdmin(request);
@@ -146,7 +141,7 @@ export async function DELETE(
     }
 
     await connectDB();
-    const { id } = context.params;
+    const { id } = await params;
     
     const event = await Event.findByIdAndDelete(id);
 

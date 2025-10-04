@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Event from '@/models/Event';
-import User from '@/models/User';
 import { requireAuth } from '@/middleware/auth';
 import { successResponse, errorResponse, handleApiError } from '@/utils/response';
 
-interface Context {
-  params: {
-    id: string;
-  }
-}
-
 export async function POST(
   request: NextRequest,
-  context: Context
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireAuth(request);
@@ -25,7 +18,7 @@ export async function POST(
     }
 
     await connectDB();
-    const { id } = context.params;
+    const { id } = await params;
     
     const event = await Event.findById(id);
 
@@ -95,7 +88,7 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  context: Context
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireAuth(request);
@@ -107,7 +100,7 @@ export async function DELETE(
     }
 
     await connectDB();
-    const { id } = context.params;
+    const { id } = await params;
     
     const event = await Event.findById(id);
 
@@ -127,9 +120,7 @@ export async function DELETE(
     }
 
     // Retirer l'utilisateur de la liste des participants
-    event.participants = event.participants.filter(
-      (participantId: any) => !participantId.equals(user._id)
-    );
+    event.participants.pull(user._id);
     await event.save();
 
     // Populer les données pour la réponse
