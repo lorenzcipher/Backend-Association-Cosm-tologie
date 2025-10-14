@@ -16,8 +16,12 @@ export async function POST(request: NextRequest) {
       lastName,
       phone,
       professionalStatus,
-      domainOfInterest
-    } = body;
+      domainOfInterest,
+      address,
+      city,
+      country,
+      biography
+      } = body;
 
     // Validation
     if (!email || !password || !firstName || !lastName || !professionalStatus) {
@@ -52,7 +56,11 @@ export async function POST(request: NextRequest) {
       lastName,
       phone,
       professionalStatus,
-      domainOfInterest: Array.isArray(domainOfInterest) ? domainOfInterest : [domainOfInterest]
+      domainOfInterest: Array.isArray(domainOfInterest) ? domainOfInterest : [domainOfInterest],
+      address,
+      city,
+      country,
+      biography
     });
 
     await profile.save();
