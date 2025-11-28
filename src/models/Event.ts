@@ -7,6 +7,8 @@ export interface IEvent extends Document {
   endDate?: Date;
   type?: string;
   image?: string; // URL to event image
+  category?: string;
+  imgUrl?: string;
   location: string;
   isOnline: boolean;
   isMemberOnly: boolean;
@@ -58,6 +60,16 @@ const EventSchema: Schema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  category: {
+    type: String,
+    required: false,
+    trim: true
+  },
+  imgUrl: {
+    type: String,
+    required: false,
+    trim: true
   },
   type: {
     type: String,
