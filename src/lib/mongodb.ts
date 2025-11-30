@@ -6,7 +6,6 @@ interface GlobalMongoose {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
   var mongooseGlobal: GlobalMongoose;
 }
 

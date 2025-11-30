@@ -32,9 +32,27 @@ export async function PUT(
     if (!user) return NextResponse.json(errorResponse('Admin access required'), { status: 403 });
 
     await connectDB();
-    const body = await request.json();
+    const body = await request.json() as {
+      title?: string;
+      description?: string;
+      imgURL?: string;
+      thumbnailUrl?: string;
+      isMemberOnly?: boolean | string;
+      tags?: string[];
+      category?: string;
+    };
 
-    const update: Record<string, any> = {};
+    type UpdateFields = {
+      title?: string;
+      description?: string;
+      fileUrl?: string;
+      thumbnailUrl?: string;
+      isMemberOnly?: boolean | string;
+      tags?: string[];
+      category?: string;
+    };
+
+    const update: Partial<UpdateFields> = {};
     if (body.title) update.title = body.title;
     if (body.description) update.description = body.description;
     if (body.imgURL) update.fileUrl = body.imgURL;

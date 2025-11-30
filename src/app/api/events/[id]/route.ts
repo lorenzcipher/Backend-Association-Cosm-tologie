@@ -20,17 +20,18 @@ interface UpdateEventBody {
   category?: string;
   imgUrl?: string;
 }
-
-async function resolveParams(params: any) {
+async function resolveParams(params: unknown): Promise<{ id?: string | string[] } | null> {
   if (!params) return null;
-  if (typeof params.then === 'function') return await params;
-  return params;
+  if (typeof (params as { then?: unknown }).then === 'function') {
+    return await (params as Promise<{ id?: string | string[] }>);
+  }
+  return params as { id?: string | string[] };
 }
 
-export async function GET(request: NextRequest, { params }: { params: any }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id?: string | string[] }> }) {
   try {
     await connectDB();
-    const resolved = await resolveParams(params);
+    const resolved = await resolveParams(params as unknown);
     const id = resolved?.id;
 
     const user = await requireAuth(request).catch(() => null);
@@ -49,13 +50,13 @@ export async function GET(request: NextRequest, { params }: { params: any }) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: any }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id?: string | string[] }> }) {
   try {
     const user = await requireAdmin(request);
     if (!user) return NextResponse.json(errorResponse('Accès administrateur requis'), { status: 403 });
 
     await connectDB();
-    const resolved = await resolveParams(params);
+    const resolved = await resolveParams(params as unknown);
     const id = resolved?.id;
     const updates: UpdateEventBody = await request.json();
 
@@ -79,13 +80,13 @@ export async function PUT(request: NextRequest, { params }: { params: any }) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: any }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id?: string | string[] }> }) {
   try {
     const user = await requireAdmin(request);
     if (!user) return NextResponse.json(errorResponse('Accès administrateur requis'), { status: 403 });
 
     await connectDB();
-    const resolved = await resolveParams(params);
+    const resolved = await resolveParams(params as unknown);
     const id = resolved?.id;
 
     const event = await Event.findByIdAndDelete(id);

@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || undefined;
     const memberOnly = searchParams.get('memberOnly');
 
-    const query: Record<string, any> = {};
+    const query: Record<string, unknown> = {};
     if (category) query.category = category;
     if (memberOnly === 'true') query.isMemberOnly = true;
     if (memberOnly === 'false') query.isMemberOnly = false;
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    const body = await request.json();
+    const body = await request.json() as { title?: string; imgURL?: string; description?: string; category?: string; isMemberOnly?: boolean | string };
     const { title, imgURL, description, category, isMemberOnly } = body;
 
     if (!title || !imgURL) {
