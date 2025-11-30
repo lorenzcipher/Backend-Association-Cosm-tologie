@@ -38,81 +38,153 @@
             "url": {
               "raw": "{{BASE_URL}}/api/articles/{{articleId}}",
               "host": ["{{BASE_URL}}"],
-              "path": ["api", "articles", "{{articleId}}"]
-            }
-          }
-        },
-        {
-          "name": "Update Article",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{BASE_URL}}/api/articles/{{articleId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "articles", "{{articleId}}"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n\t\"title\": \"Updated Title\",\n\t\"content\": \"Updated content\",\n\t\"isPublished\": true\n}"
-            }
-          }
-        },
-        {
-          "name": "Delete Article",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{BASE_URL}}/api/articles/{{articleId}}",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "articles", "{{articleId}}"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Events",
-      "item": [
-        {
-          "name": "Register for Event",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{BASE_URL}}/api/events/{{eventId}}/register",
-              "host": ["{{BASE_URL}}"],
-              "path": ["api", "events", "{{eventId}}", "register"]
-            }
-          }
-        }
-      ]
-    }
-  ],
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:3000/api"
-    }
-  ]
-}
+              "item": [
+                {
+                  "name": "Authentication",
+                  "item": [
+                    {
+                      "name": "Login",
+                      "request": {
+                        "method": "POST",
+                        "url": "{{baseUrl}}/auth/login",
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}",
+                          "options": { "raw": { "language": "json" } }
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "Articles",
+                  "item": [
+                    {
+                      "name": "Get Article",
+                      "request": {
+                        "method": "GET",
+                        "header": [
+                          { "key": "Authorization", "value": "Bearer {{token}}" }
+                        ],
+                        "url": { "raw": "{{baseUrl}}/articles/{{articleId}}", "host": ["{{baseUrl}}"], "path": ["articles","{{articleId}}"] }
+                      }
+                    },
+                    {
+                      "name": "Update Article",
+                      "request": {
+                        "method": "PUT",
+                        "header": [
+                          { "key": "Authorization", "value": "Bearer {{token}}" },
+                          { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "url": { "raw": "{{baseUrl}}/articles/{{articleId}}", "host": ["{{baseUrl}}"], "path": ["articles","{{articleId}}"] },
+                        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Updated Title\",\n  \"content\": \"Updated content\",\n  \"isPublished\": true\n}", "options": { "raw": { "language": "json" } } }
+                      }
+                    },
+                    {
+                      "name": "Delete Article",
+                      "request": {
+                        "method": "DELETE",
+                        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+                        "url": { "raw": "{{baseUrl}}/articles/{{articleId}}", "host": ["{{baseUrl}}"], "path": ["articles","{{articleId}}"] }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "Events",
+                  "item": [
+                    {
+                      "name": "List Events",
+                      "request": {
+                        "method": "GET",
+                        "url": { "raw": "{{baseUrl}}/events", "host": ["{{baseUrl}}"], "path": ["events"] }
+                      }
+                    },
+                    {
+                      "name": "List Upcoming Events",
+                      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/events?upcoming=true", "host": ["{{baseUrl}}"], "path": ["events"] } }
+                    },
+                    {
+                      "name": "Get Event",
+                      "request": {
+                        "method": "GET",
+                        "url": { "raw": "{{baseUrl}}/events/{{eventId}}", "host": ["{{baseUrl}}"], "path": ["events","{{eventId}}"] }
+                      }
+                    },
+                    {
+                      "name": "Create Event (admin)",
+                      "request": {
+                        "method": "POST",
+                        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+                        "url": { "raw": "{{baseUrl}}/events", "host": ["{{baseUrl}}"], "path": ["events"] },
+                        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Workshop Example\",\n  \"description\": \"Hands-on workshop\",\n  \"startDate\": \"2025-12-01T10:00:00Z\",\n  \"endDate\": \"2025-12-01T12:00:00Z\",\n  \"location\": \"Paris\",\n  \"isOnline\": false,\n  \"isMemberOnly\": false,\n  \"maxParticipants\": 50,\n  \"registrationRequired\": true,\n  \"registrationDeadline\": \"2025-11-30T23:59:59Z\",\n  \"memberPrice\": 10,\n  \"nonMemberPrice\": 20,\n  \"category\": \"Workshop\",\n  \"imgUrl\": \"https://example.com/images/event.jpg\"\n}", "options": { "raw": { "language": "json" } } }
+                      }
+                    },
+                    {
+                      "name": "Update Event (admin)",
+                      "request": {
+                        "method": "PUT",
+                        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+                        "url": { "raw": "{{baseUrl}}/events/{{eventId}}", "host": ["{{baseUrl}}"], "path": ["events","{{eventId}}"] },
+                        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Updated title\",\n  \"location\": \"New location\"\n}", "options": { "raw": { "language": "json" } } }
+                      }
+                    },
+                    {
+                      "name": "Delete Event (admin)",
+                      "request": { "method": "DELETE", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "url": { "raw": "{{baseUrl}}/events/{{eventId}}", "host": ["{{baseUrl}}"], "path": ["events","{{eventId}}"] } }
+                    },
+                    {
+                      "name": "Register for Event (user)",
+                      "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "url": { "raw": "{{baseUrl}}/events/{{eventId}}/register", "host": ["{{baseUrl}}"], "path": ["events","{{eventId}}","register"] } }
+                    },
+                    {
+                      "name": "Unregister from Event (user)",
+                      "request": { "method": "DELETE", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "url": { "raw": "{{baseUrl}}/events/{{eventId}}/register", "host": ["{{baseUrl}}"], "path": ["events","{{eventId}}","register"] } }
+                    }
+                  ]
+                },
+                {
+                  "name": "Media",
+                  "item": [
+                    {
+                      "name": "List Media",
+                      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/media", "host": ["{{baseUrl}}"], "path": ["media"] } }
+                    },
+                    {
+                      "name": "Get Media",
+                      "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/media/{{mediaId}}", "host": ["{{baseUrl}}"], "path": ["media","{{mediaId}}"] } }
+                    },
+                    {
+                      "name": "Create Media (JSON) (admin)",
+                      "request": {
+                        "method": "POST",
+                        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ],
+                        "url": { "raw": "{{baseUrl}}/media", "host": ["{{baseUrl}}"], "path": ["media"] },
+                        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Example image\",\n  \"description\": \"An example image uploaded by admin\",\n  \"fileUrl\": \"https://example.com/uploads/photo.jpg\",\n  \"fileType\": \"image\",\n  \"thumbnailUrl\": \"https://example.com/uploads/thumb.jpg\",\n  \"isMemberOnly\": false,\n  \"tags\": [\"skincare\",\"workshop\"]\n}", "options": { "raw": { "language": "json" } } }
+                      }
+                    },
+                    {
+                      "name": "Create Media (multipart upload) (admin)",
+                      "request": {
+                        "method": "POST",
+                        "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ],
+                        "url": { "raw": "{{baseUrl}}/media/upload", "host": ["{{baseUrl}}"], "path": ["media","upload"] },
+                        "body": { "mode": "formdata", "formdata": [ { "key": "file", "type": "file" }, { "key": "title", "value": "Uploaded image", "type": "text" }, { "key": "fileType", "value": "image", "type": "text" } ] }
+                      }
+                    },
+                    {
+                      "name": "Update Media (admin)",
+                      "request": { "method": "PUT", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/media/{{mediaId}}", "host": ["{{baseUrl}}"], "path": ["media","{{mediaId}}"] }, "body": { "mode": "raw", "raw": "{\n  \"title\": \"Updated media title\",\n  \"tags\": [\"updated\",\"gallery\"]\n}", "options": { "raw": { "language": "json" } } } }
+                    },
+                    {
+                      "name": "Delete Media (admin)",
+                      "request": { "method": "DELETE", "header": [ { "key": "Authorization", "value": "Bearer {{token}}" } ], "url": { "raw": "{{baseUrl}}/media/{{mediaId}}", "host": ["{{baseUrl}}"], "path": ["media","{{mediaId}}"] } }
+                    }
+                  ]
+                }
+              ],
+              "variable": [
+                { "key": "baseUrl", "value": "http://localhost:3000/api" },
+                { "key": "token", "value": "" }
+              ]
