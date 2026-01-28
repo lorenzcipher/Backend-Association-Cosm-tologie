@@ -48,7 +48,7 @@ const ProfileSchema: Schema = new Schema({
   professionalStatus: {
     type: String,
     required: true
-  },
+  }, 
   domainOfInterest: [{
     type: String,
     enum: ['skincare', 'makeup', 'research', 'teaching', 'business', 'technology']
