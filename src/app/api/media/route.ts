@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    const body = await request.json() as { title?: string; imgURL?: string; description?: string; category?: string; isMemberOnly?: boolean | string };
-    const { title, imgURL, description, category, isMemberOnly } = body;
+    const body = await request.json() as { title?: string; imgURL?: string; description?: string; category?: string; isMemberOnly?: boolean | string; fileType?: string };
+    const { title, imgURL, description, category, isMemberOnly, fileType } = body;
 
     if (!title || !imgURL) {
       return NextResponse.json(errorResponse('Title and imgURL are required'), { status: 400 });
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       title,
       description: description || '',
       fileUrl: imgURL,
-      fileType: 'image',
+      fileType: fileType || 'image',
       thumbnailUrl: imgURL,
       isMemberOnly: !!isMemberOnly,
       uploadedBy: user._id,
