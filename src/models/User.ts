@@ -33,7 +33,7 @@ const UserSchema: Schema = new Schema({
   },
   isActive: {
     type: Boolean,
-    default: true
+    default: false
   },
   isVerified: {
     type: Boolean,
