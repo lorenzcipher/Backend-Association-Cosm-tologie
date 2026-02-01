@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
+import Profile from '@/models/Profile';
 
 export interface AuthenticatedRequest extends NextRequest {
   user?: {
@@ -20,6 +21,12 @@ export async function verifyToken(token: string) {
     const user = await User.findById(decoded.id).select('-password');
     
     if (!user || !user.isActive) {
+      return null;
+    }
+
+    // Check if user's profile is blocked
+    const profile = await Profile.findOne({ userId: user._id });
+    if (profile && profile.status === 'blocked') {
       return null;
     }
     

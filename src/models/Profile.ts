@@ -20,7 +20,7 @@ export interface IProfile extends Document {
   membershipStartDate?: Date;
   membershipExpiryDate?: Date;
   membershipStatus: 'pending' | 'active' | 'expired' | 'cancelled';
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'pending' | 'blocked';
   payed: boolean;
   orderId?: string;
   createdAt: Date;
@@ -75,7 +75,7 @@ const ProfileSchema: Schema = new Schema({
   },
   status: {
     type: String,
-    enum: ['active', 'inactive'],
+    enum: ['active', 'inactive', 'pending', 'blocked'],
     default: 'inactive'
   },
   payed: {
