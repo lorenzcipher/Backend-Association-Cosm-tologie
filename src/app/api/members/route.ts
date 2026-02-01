@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const search = searchParams.get('search');
 
-    const query: Record<string, unknown> = { membershipStatus: 'active' };
+    const query: Record<string, unknown> = { membershipStatus: 'active', status: 'active' };
     
     if (search) {
       query.$or = [
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     const profiles = await Profile.find(query)
       .populate('userId', 'email')
-      .select('firstName lastName professionalStatus domainOfInterest city country avatar')
+      .select('firstName lastName professionalStatus domainOfInterest city country avatar status')
       .sort({ firstName: 1, lastName: 1 })
       .skip(skip)
       .limit(limit);
