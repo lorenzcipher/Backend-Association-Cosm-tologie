@@ -30,7 +30,8 @@ export async function PATCH(request: NextRequest) {
       { userId: userId },
       {
         status: 'active',
-        payed: true
+        payed: true,
+        membershipStatus: 'active'
       },
       { new: true, runValidators: true }
     );

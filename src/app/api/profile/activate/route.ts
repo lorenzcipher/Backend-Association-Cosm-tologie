@@ -31,7 +31,8 @@ export async function PATCH(request: NextRequest) {
       {
         status: 'active',
         payed: true,
-        orderId: orderId
+        orderId: orderId,
+        membershipStatus: 'active'
       },
       { new: true, runValidators: true }
     );
