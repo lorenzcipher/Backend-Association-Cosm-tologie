@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt, { Secret, SignOptions } from 'jsonwebtoken';
+import QRCode from 'qrcode';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import { successResponse, errorResponse, handleApiError } from '@/utils/response';
+import { signMemberCardToken } from '@/lib/memberCardToken';
 
 export async function POST(request: NextRequest) {
   try {
@@ -72,6 +74,17 @@ export async function POST(request: NextRequest) {
       signOptions
     );
 
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ||
+      request.nextUrl.origin;
+    const memberCardToken = signMemberCardToken(user._id.toString());
+    const memberCardUrl = `${baseUrl}/api/public/member-card?t=${encodeURIComponent(memberCardToken)}`;
+    const qrPngDataUrl = await QRCode.toDataURL(memberCardUrl, {
+      width: 320,
+      margin: 2,
+      errorCorrectionLevel: 'M'
+    });
+
     return NextResponse.json(
       successResponse({
         token,
@@ -80,6 +93,11 @@ export async function POST(request: NextRequest) {
           email: user.email,
           role: user.role,
           isVerified: user.isVerified
+        },
+        memberCard: {
+          token: memberCardToken,
+          url: memberCardUrl,
+          qrPngDataUrl
         }
       }, 'Login successful')
     );
