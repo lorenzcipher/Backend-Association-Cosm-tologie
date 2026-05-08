@@ -9,6 +9,8 @@ interface CreateEventBody {
   description: string;
   startDate: Date;
   endDate: Date;
+  type?: string;
+  image?: string; // URL
   location: string;
   isOnline: boolean;
   isMemberOnly: boolean;
@@ -99,3 +101,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response, { status });
   }
 }
+
+// single-event operations are implemented in src/app/api/events/[id]/route.ts

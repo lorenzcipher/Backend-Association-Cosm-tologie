@@ -149,7 +149,9 @@ curl -X POST "$BASE_URL/events" \
     "isMemberOnly": true,
     "maxParticipants": 500,
     "registrationRequired": true,
-    "registrationDeadline": "2024-06-01T23:59:59Z"
+    "registrationDeadline": "2024-06-01T23:59:59Z",
+    "category": "Conference",
+    "imgUrl": "https://example.com/images/congres-2024.jpg"
   }'
 ```
 
@@ -162,6 +164,58 @@ curl -X POST "$BASE_URL/events/EVENT_ID/register" \
 ### Se désinscrire d'un événement
 ```bash
 curl -X DELETE "$BASE_URL/events/EVENT_ID/register" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+## 🖼️ Galerie / Media
+
+### Liste des médias
+```bash
+curl -X GET "$BASE_URL/media?page=1&limit=20"
+```
+
+### Obtenir un média
+```bash
+curl -X GET "$BASE_URL/media/MEDIA_ID"
+```
+
+### Créer un média (JSON) - admin
+```bash
+curl -X POST "$BASE_URL/media" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Image conférence 2024",
+    "description": "Photo prise lors du congrès",
+    "fileUrl": "https://example.com/uploads/congres-photo.jpg",
+    "fileType": "image",
+    "thumbnailUrl": "https://example.com/uploads/congres-thumb.jpg",
+    "isMemberOnly": false,
+    "tags": ["congrès","2024","photo"]
+  }'
+```
+
+### Créer un média (upload multipart) - admin
+```bash
+curl -X POST "$BASE_URL/media/upload" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@./path/to/image.jpg" \
+  -F "title=Image uploadée" \
+  -F "fileType=image" \
+  -F "isMemberOnly=false"
+```
+
+### Mettre à jour un média (admin)
+```bash
+curl -X PUT "$BASE_URL/media/MEDIA_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Titre mis à jour","tags":["updated","gallery"]}'
+```
+
+### Supprimer un média (admin)
+```bash
+curl -X DELETE "$BASE_URL/media/MEDIA_ID" \
   -H "Authorization: Bearer $TOKEN"
 ```
 

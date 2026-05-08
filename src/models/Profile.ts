@@ -20,6 +20,9 @@ export interface IProfile extends Document {
   membershipStartDate?: Date;
   membershipExpiryDate?: Date;
   membershipStatus: 'pending' | 'active' | 'expired' | 'cancelled';
+  status: 'active' | 'inactive' | 'pending' | 'blocked';
+  payed: boolean;
+  orderId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,9 +50,8 @@ const ProfileSchema: Schema = new Schema({
   },
   professionalStatus: {
     type: String,
-    required: true,
-    enum: ['student', 'professional', 'researcher', 'teacher', 'other']
-  },
+    required: true
+  }, 
   domainOfInterest: [{
     type: String,
     enum: ['skincare', 'makeup', 'research', 'teaching', 'business', 'technology']
@@ -70,7 +72,17 @@ const ProfileSchema: Schema = new Schema({
     type: String,
     enum: ['pending', 'active', 'expired', 'cancelled'],
     default: 'pending'
-  }
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'pending', 'blocked'],
+    default: 'inactive'
+  },
+  payed: {
+    type: Boolean,
+    default: false
+  },
+  orderId: String
 }, {
   timestamps: true
 });

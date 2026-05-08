@@ -9,6 +9,7 @@ export interface IMedia extends Document {
   isMemberOnly: boolean;
   uploadedBy: mongoose.Types.ObjectId;
   tags: string[];
+  category?: string;
   views: number;
   createdAt: Date;
 }
@@ -40,6 +41,11 @@ const MediaSchema: Schema = new Schema({
     required: true
   },
   tags: [String],
+  category: {
+    type: String,
+    required: false,
+    trim: true
+  },
   views: {
     type: Number,
     default: 0
