@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/middleware/auth';
-import { createMailTransporter, getMailFromAddress } from '@/lib/mail';
+import {
+  getMailConfigSummary,
+  getMailFromAddress,
+  getSmtpErrorDetails,
+  isSmtpAuthError,
+  sendMailWithFallback,
+} from '@/lib/mail';
 import { successResponse, errorResponse, handleApiError } from '@/utils/response';
 
 export async function POST(request: NextRequest) {
@@ -37,9 +43,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const transporter = createMailTransporter();
-    await transporter.verify();
-
     const from = getMailFromAddress();
     if (!from) {
       return NextResponse.json(
@@ -48,7 +51,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await transporter.sendMail({
+    const { port } = await sendMailWithFallback({
       from,
       to,
       subject: subject || 'No subject',
@@ -57,26 +60,40 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      successResponse(null, 'Email sent successfully')
+      successResponse({ smtpPort: port }, 'Email sent successfully')
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : '';
-    if (
-      message.includes('SMTP AUTH') ||
-      (error &&
-        typeof error === 'object' &&
-        'code' in error &&
-        (error as { code?: string }).code === 'EAUTH')
-    ) {
+    const smtpDetails = getSmtpErrorDetails(error);
+    const config = getMailConfigSummary();
+
+    if (isSmtpAuthError(error)) {
       return NextResponse.json(
-        errorResponse(
-          'SMTP authentication failed. Verify EMAIL_USER, EMAIL_PASS and EMAIL_FROM on Vercel (no quotes around password).'
-        ),
+        {
+          success: false,
+          message: 'Error',
+          error:
+            'SMTP authentication failed. Check EMAIL_USER, EMAIL_PASS and EMAIL_FROM on Vercel (no quotes). Try EMAIL_PORT=587 and EMAIL_FALLBACK_PORT=587.',
+          data: {
+            config,
+            smtp: smtpDetails,
+          },
+        },
         { status: 502 }
       );
     }
 
+    console.error('Email send failed:', { config, smtpDetails });
+
     const { status, response } = handleApiError(error);
-    return NextResponse.json(response, { status });
+    return NextResponse.json(
+      {
+        ...response,
+        data: {
+          config,
+          smtp: smtpDetails,
+        },
+      },
+      { status }
+    );
   }
 }

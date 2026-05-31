@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
+import type { Options as MailOptions } from 'nodemailer/lib/mailer';
 
 function env(name: string): string | undefined {
   const raw = process.env[name];
@@ -14,6 +15,21 @@ function env(name: string): string | undefined {
   return trimmed;
 }
 
+export function getMailConfigSummary() {
+  const host = env('EMAIL_HOST') || env('SMTP_HOST');
+  const port = Number(env('EMAIL_PORT') || env('SMTP_PORT') || '465');
+  const user = env('EMAIL_USER') || env('SMTP_USER');
+  const pass = env('EMAIL_PASS') || env('SMTP_PASS');
+
+  return {
+    host: host || null,
+    port,
+    user: user || null,
+    passConfigured: Boolean(pass),
+    from: getMailFromAddress() || null,
+  };
+}
+
 export function getMailFromAddress(): string {
   return (
     env('EMAIL_FROM') ||
@@ -24,9 +40,8 @@ export function getMailFromAddress(): string {
   );
 }
 
-export function createMailTransporter() {
+function buildTransportOptions(port: number): SMTPTransport.Options {
   const host = env('EMAIL_HOST') || env('SMTP_HOST');
-  const port = Number(env('EMAIL_PORT') || env('SMTP_PORT') || '465');
   const user = env('EMAIL_USER') || env('SMTP_USER');
   const pass = env('EMAIL_PASS') || env('SMTP_PASS');
 
@@ -45,11 +60,13 @@ export function createMailTransporter() {
     port,
     secure,
     auth: { user, pass },
-    authMethod: 'LOGIN',
     tls: {
       minVersion: 'TLSv1.2',
       servername: host,
     },
+    connectionTimeout: 30_000,
+    greetingTimeout: 30_000,
+    socketTimeout: 60_000,
   };
 
   if (port === 587) {
@@ -57,5 +74,70 @@ export function createMailTransporter() {
     options.requireTLS = true;
   }
 
-  return nodemailer.createTransport(options);
+  return options;
+}
+
+export function createMailTransporter(portOverride?: number) {
+  const port = portOverride ?? Number(env('EMAIL_PORT') || env('SMTP_PORT') || '465');
+  return nodemailer.createTransport(buildTransportOptions(port));
+}
+
+export function getSmtpErrorDetails(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return { message: 'Unknown SMTP error' };
+  }
+
+  const err = error as {
+    message?: string;
+    code?: string;
+    response?: string;
+    responseCode?: number;
+    command?: string;
+  };
+
+  return {
+    message: err.message,
+    code: err.code,
+    response: err.response,
+    responseCode: err.responseCode,
+    command: err.command,
+  };
+}
+
+export function isSmtpAuthError(error: unknown): boolean {
+  const details = getSmtpErrorDetails(error);
+  const message = details.message || '';
+  return (
+    details.code === 'EAUTH' ||
+    message.includes('SMTP AUTH') ||
+    message.includes('Authentication') ||
+    details.responseCode === 535 ||
+    details.responseCode === 530
+  );
+}
+
+export async function sendMailWithFallback(mailOptions: MailOptions) {
+  const primaryPort = Number(env('EMAIL_PORT') || env('SMTP_PORT') || '465');
+  const fallbackPort = Number(env('EMAIL_FALLBACK_PORT') || '587');
+
+  const attempts = [primaryPort];
+  if (fallbackPort && fallbackPort !== primaryPort) {
+    attempts.push(fallbackPort);
+  }
+
+  let lastError: unknown;
+
+  for (const port of attempts) {
+    const transporter = createMailTransporter(port);
+    try {
+      await transporter.verify();
+      await transporter.sendMail(mailOptions);
+      return { port };
+    } catch (error) {
+      lastError = error;
+      console.error(`SMTP attempt failed on port ${port}:`, getSmtpErrorDetails(error));
+    }
+  }
+
+  throw lastError;
 }
