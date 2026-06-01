@@ -1,8 +1,10 @@
 import nodemailer from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
-import type { Options as MailOptions } from 'nodemailer/lib/mailer';
+import { sendViaBrevoApi, type EmailAttachment, type SendEmailInput } from '@/lib/brevoApi';
 
-export type MailMode = 'relay' | 'direct';
+export type MailMode = 'relay' | 'direct' | 'brevo-api';
+
+export type { EmailAttachment, SendEmailInput };
 
 const RELAY_PRESETS: Record<
   string,
@@ -27,7 +29,18 @@ function env(name: string): string | undefined {
   return trimmed;
 }
 
+export function getBrevoApiKey(): string | undefined {
+  return env('BREVO_API_KEY');
+}
+
+export function shouldUseBrevoApi(): boolean {
+  return Boolean(getBrevoApiKey());
+}
+
 export function getMailMode(): MailMode {
+  if (shouldUseBrevoApi()) {
+    return 'brevo-api';
+  }
   if (env('EMAIL_USE_RELAY') === 'true' || env('SMTP_RELAY_HOST')) {
     return 'relay';
   }
@@ -59,6 +72,15 @@ function getDirectSettings(portOverride?: number) {
 
 export function getMailConfigSummary() {
   const mode = getMailMode();
+
+  if (mode === 'brevo-api') {
+    return {
+      mode,
+      provider: 'brevo',
+      apiKeyConfigured: Boolean(getBrevoApiKey()),
+      from: getMailFromAddress() || null,
+    };
+  }
 
   if (mode === 'relay') {
     const relay = getRelaySettings();
@@ -211,12 +233,39 @@ export function isSmtpAuthError(error: unknown): boolean {
     details.code === 'EAUTH' ||
     message.includes('SMTP AUTH') ||
     message.includes('Authentication') ||
+    message.includes('Unauthorized IP') ||
+    details.responseCode === 525 ||
     details.responseCode === 535 ||
     details.responseCode === 530
   );
 }
 
-export async function sendMailWithFallback(mailOptions: MailOptions) {
+export function isBrevoIpBlockedError(error: unknown): boolean {
+  const details = getSmtpErrorDetails(error);
+  return (
+    details.responseCode === 525 ||
+    (details.message || '').includes('Unauthorized IP')
+  );
+}
+
+export async function sendEmail(input: SendEmailInput) {
+  const apiKey = getBrevoApiKey();
+  if (apiKey) {
+    return sendViaBrevoApi(input, apiKey);
+  }
+
+  return sendMailWithFallback(input);
+}
+
+export async function sendMailWithFallback(input: SendEmailInput) {
+  const mailOptions = {
+    from: input.from,
+    to: input.to,
+    subject: input.subject,
+    html: input.html,
+    attachments: input.attachments,
+  };
+
   const mode = getMailMode();
 
   if (mode === 'relay') {
@@ -224,7 +273,7 @@ export async function sendMailWithFallback(mailOptions: MailOptions) {
     const transporter = createMailTransporter(relay.port);
     await transporter.verify();
     await transporter.sendMail(mailOptions);
-    return { mode, port: relay.port, provider: relay.provider };
+    return { mode: 'relay' as const, port: relay.port, provider: relay.provider };
   }
 
   const primaryPort = Number(env('EMAIL_PORT') || env('SMTP_PORT') || '465');
@@ -242,7 +291,7 @@ export async function sendMailWithFallback(mailOptions: MailOptions) {
     try {
       await transporter.verify();
       await transporter.sendMail(mailOptions);
-      return { mode, port, provider: null };
+      return { mode: 'direct' as const, port, provider: null };
     } catch (error) {
       lastError = error;
       console.error(`SMTP attempt failed on port ${port}:`, getSmtpErrorDetails(error));

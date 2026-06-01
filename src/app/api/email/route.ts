@@ -5,7 +5,8 @@ import {
   getMailFromAddress,
   getSmtpErrorDetails,
   isSmtpAuthError,
-  sendMailWithFallback,
+  isBrevoIpBlockedError,
+  sendEmail,
 } from '@/lib/mail';
 import { successResponse, errorResponse, handleApiError } from '@/utils/response';
 
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const sendResult = await sendMailWithFallback({
+    const sendResult = await sendEmail({
       from,
       to,
       subject: subject || 'No subject',
@@ -67,14 +68,16 @@ export async function POST(request: NextRequest) {
     const config = getMailConfigSummary();
 
     if (isSmtpAuthError(error)) {
+      const brevoIpBlocked = isBrevoIpBlockedError(error);
       return NextResponse.json(
         {
           success: false,
           message: 'Error',
-          error:
-            config.mode === 'relay'
+          error: brevoIpBlocked
+            ? 'Brevo bloque l’IP Vercel en SMTP (525). Ajoutez BREVO_API_KEY sur Vercel (API Brevo, pas le mot de passe SMTP).'
+            : config.mode === 'relay'
               ? 'SMTP relay authentication failed. Check SMTP_RELAY_USER, SMTP_RELAY_PASS and SMTP_RELAY_FROM on Vercel.'
-              : 'SMTP authentication failed. Use EMAIL_USE_RELAY=true with Brevo/SendGrid, or fix EMAIL_USER/EMAIL_PASS for direct SMTP.',
+              : 'SMTP authentication failed. Use BREVO_API_KEY or EMAIL_USE_RELAY=true with Brevo.',
           data: {
             config,
             smtp: smtpDetails,
