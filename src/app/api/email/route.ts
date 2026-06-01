@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { port } = await sendMailWithFallback({
+    const sendResult = await sendMailWithFallback({
       from,
       to,
       subject: subject || 'No subject',
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      successResponse({ smtpPort: port }, 'Email sent successfully')
+      successResponse(sendResult, 'Email sent successfully')
     );
   } catch (error) {
     const smtpDetails = getSmtpErrorDetails(error);
@@ -72,7 +72,9 @@ export async function POST(request: NextRequest) {
           success: false,
           message: 'Error',
           error:
-            'SMTP authentication failed. Check EMAIL_USER, EMAIL_PASS and EMAIL_FROM on Vercel (no quotes). Try EMAIL_PORT=587 and EMAIL_FALLBACK_PORT=587.',
+            config.mode === 'relay'
+              ? 'SMTP relay authentication failed. Check SMTP_RELAY_USER, SMTP_RELAY_PASS and SMTP_RELAY_FROM on Vercel.'
+              : 'SMTP authentication failed. Use EMAIL_USE_RELAY=true with Brevo/SendGrid, or fix EMAIL_USER/EMAIL_PASS for direct SMTP.',
           data: {
             config,
             smtp: smtpDetails,

@@ -33,11 +33,19 @@ MONGODB_URI=mongodb+srv://votre-username:votre-password@cluster0.xxxxx.mongodb.n
 JWT_SECRET=votre-secret-jwt-super-securise-ici-minimum-32-caracteres
 JWT_EXPIRE=30d
 
-# Email Configuration (optionnel pour les notifications)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=votre-email@gmail.com
-EMAIL_PASS=votre-mot-de-passe-app
+# Email — relais SMTP cloud (recommandé sur Vercel)
+EMAIL_USE_RELAY=true
+SMTP_RELAY_PROVIDER=brevo
+SMTP_RELAY_USER=votre-login-brevo@smtp-brevo.com
+SMTP_RELAY_PASS=xsmtpsib-votre-cle-smtp-brevo
+SMTP_RELAY_FROM=notification@fapharmacie.dz
+
+# Email — serveur direct (si non bloqué par l'hébergeur)
+# EMAIL_HOST=mail.fapharmacie.dz
+# EMAIL_PORT=587
+# EMAIL_USER=notification@fapharmacie.dz
+# EMAIL_PASS=votre-mot-de-passe
+# EMAIL_FROM=notification@fapharmacie.dz
 
 # Upload Configuration
 UPLOAD_DIR=uploads
